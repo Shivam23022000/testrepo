@@ -1,0 +1,107 @@
+Persistence
+    - Make object data live throught the application, i.e. out of scope
+
+Problems
+    - Object Relation Impedence Mismatch
+        - Object model and relational model do not work very well together
+        - Object store data in interconnected graphs, and relational model store in tabular format
+    - Granularity
+        - Object model in which one class contains object of another class, thus more classes than tables
+        - As name, (city, country) stored in single table
+    - Subtype(Inheritance)
+        - RDBMS doesn't support inheritance
+    - Identity
+        - RDBMS has one notion sameness using primary key, object has Identity and equality
+
+Hibernate:
+    - A ORM tool, implementation of JPA
+    - Open source, light weight, Complex Joins, Auto table creation
+    - 2 ways: XML based and Annotation based
+
+    Ways:
+        A. XML based
+            1. Create Java project
+            2. Add jar files to Hibernate
+            3. Create persistent class
+            4. Create mapping file (persistent_class.hbm.xml)(Related to class like hibernate-mapping, class, id, generator, property)
+            5. Create configuration file (hibernate.cfg.xml)(Related to database like dialect, url, username, password, driver and mapping file)
+            6. Create class to store and retrieve object (main class)
+                (hibernate.cfg.xml -> Persistence/Configuration -> EntityManagerFactory/SessionFactory -> EntityManager/Session -> 
+                Transaction -> session.persist(obj) -> t.commit() -> session.close())
+            7. Run application
+
+        B. Annotation based
+            1. Create Maven/Gradle project
+            2. Add jar dependencies
+            3. Create persistent class (mandatory: @Entity, @Id) (optional: @Table, @GeneratedValue, @Column, @Transient)
+            4. Create configuration file (hibernate.cfg.xml)(Related to database like dialect, url, username, password, driver, mapping class)
+            5. Create class to store and retrieve object (main class)
+            6. Run application
+    - Methods: persist, merge, remove, find(class, primary key), contains, flush, close
+
+Java Persistence Query Language(JPQL):
+    - Same as SQL, but doesn't depends on table rather on class name
+    - Database independent
+    - Easy to learn
+    - JPA provides two interface
+        - Query: To query result
+        - TypedQuery<T>: To query result in type same manner
+    - Methods:
+        - getSingleResult()
+        - getResultList()
+        - executeUpdate()
+    - Example
+        - Query query = entityManager.createQuery("Select student from Student student");
+        - TypedQuery<Student> query = entityManager.createQuery("Select student from Student student", Student.class);
+    - Dynamic Query:
+        - TypedQuery<Student> query = entityManager.createQuery("Select student from Student student where student.id=:id", Student.class);
+            query.setParameter("id", 101);
+
+Hibernate Query Language(HQL):
+    - Example
+        1. Select command
+        Query query=session.createQuery("from ClassName");
+        List list = query.list();
+        
+        2. Results from 5 to 10
+        query.setFirstResult(5);
+        query.setMaxResult(10); 
+        List list=query.list();
+        
+        3. Update command
+        Transaction tx=session.beginTransaction();
+        Query q=session.createQuery("update ClassName set variable1=:n where variable2=:i");
+        q.setParameter(n, value1);
+        q.setParameter(i, value2);
+        q.executeUpdate();
+        tx.commit();
+
+        4. Delete command
+        Query query=session.createQuery("delete from ClassName where variable=value");
+        query.executeUpdate();
+        
+        5. Aggregate functions
+        Query q=session.createQuery("select sum(variable) from ClassName");                 (Other max, min, count, avg)
+        List<Integer> list=q.list();
+
+Hibernate Named Query
+    - For giving some meaningful name to query, like alias
+    - By annotation or by mapping file
+    - By annotation
+        - Using @NamedQueries and @NamedQuery
+            @NamedQueries({
+                @NamedQuery(name = "QueryName", query = "from ClassName c where c.variable = :value")
+                ...
+            })
+        - Write before @Entity annotation
+        - In main class
+            TypedQuery query = session.getNamedQuery("QueryName");    
+            query.setParameter("value", ActualValue);   
+                    
+            List<DataType> obj=query.getResultList();
+    - By mapping file
+        - Write below code in hibernate mapping file(.hbm.xml) and outside <class> tag
+            <query name="QueryName">  
+            <![CDATA[from ClassName c where c.variable = :value]]>  
+            </query>
+        - Use in main class as above
